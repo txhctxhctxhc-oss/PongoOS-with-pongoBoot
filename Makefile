@@ -35,7 +35,7 @@ ifeq ($(HOST_OS),Darwin)
 else
 ifeq ($(HOST_OS),Linux)
 	EMBEDDED_CC         ?= clang
-	EMBEDDED_LDFLAGS    ?= -fuse-ld=/usr/bin/ld64
+	EMBEDDED_LDFLAGS    ?= -fuse-ld=/usr/local/bin/aarch64-apple-darwin-ld
 	STRIP               ?= cctools-strip
 	STAT                ?= stat -L -c %s
 endif
@@ -56,14 +56,14 @@ EMBEDDED_CC_FLAGS       ?= --target=arm64-apple-ios12.0 -std=gnu17 -Wall -Wunuse
 
 # Pongo options
 PONGO_LDFLAGS           ?= -L$(LIB)/lib -lc -lm -Wl,-preload -Wl,-no_uuid -Wl,-e,start -Wl,-order_file,$(SRC)/sym_order.txt -Wl,-image_base,0x100000000 -Wl,-sectalign,__DATA,__common,0x8 -Wl,-segalign,0x4000
-PONGO_CC_FLAGS          ?= -DPONGO_VERSION='"$(PONGO_VERSION)"' -DAUTOBOOT -DPONGO_PRIVATE=1 -I$(SRC)/lib -I$(INC) -Iapple-include -I$(INC)/modules/linux/ -I$(SRC)/kernel -I$(SRC)/drivers -I$(SRC)/modules/linux/libfdt $(PONGO_LDFLAGS) -DDER_TAG_SIZE=8
+PONGO_CC_FLAGS          ?= -DPONGO_VERSION='"$(PONGO_VERSION)"' -DAUTOBOOT -DPONGO_PRIVATE=1 -I$(SRC)/lib -I$(INC) -Iapple-include -I$(INC)/modules/linux/ -I$(SRC)/kernel -I$(SRC)/drivers -I$(SRC)/modules/linux/libfdt -I$(SRC)/pongoboot $(PONGO_LDFLAGS) -DDER_TAG_SIZE=8
 
 # KPF options
 CHECKRA1N_LDFLAGS       ?= -Wl,-kext
-CHECKRA1N_CC_FLAGS      ?= -DCHECKRAIN_VERSION='"0.12.4"' -I$(INC) -Iapple-include -I$(SRC)/kernel -I$(SRC)/drivers $(CHECKRA1N_LDFLAGS) $(KPF_CFLAGS) -DDER_TAG_SIZE=8 -I$(SRC)/lib -DPONGO_PRIVATE=1
+CHECKRA1N_CC_FLAGS ?= -DCHECKRAIN_VERSION='"0.12.4"' -I$(INC) -Iapple-include -I$(SRC)/kernel -I$(SRC)/drivers $(CHECKRA1N_LDFLAGS) $(KPF_CFLAGS) -DDER_TAG_SIZE=8 -I$(SRC)/lib -DPONGO_PRIVATE=1 -Wno-unused-but-set-variable -Wno-unused-but-set-variable
 
 STAGE3_ENTRY_C          := $(patsubst %, $(SRC)/boot/%, stage3.c clearhook.S patches.S demote_patch.S jump_to_image.S main.c)
-PONGO_C                 := $(wildcard $(SRC)/kernel/*.c) $(wildcard $(SRC)/kernel/support/*.c) $(wildcard $(SRC)/dynamic/*.c) $(wildcard $(SRC)/kernel/*.S) $(wildcard $(SRC)/shell/*.c)
+PONGO_C                 := $(wildcard $(SRC)/kernel/*.c) $(wildcard $(SRC)/kernel/support/*.c) $(wildcard $(SRC)/dynamic/*.c) $(wildcard $(SRC)/kernel/*.S) $(wildcard $(SRC)/shell/*.c) $(wildcard $(SRC)/pongoboot/*.c)
 PONGO_DRIVERS_C         := $(wildcard $(SRC)/drivers/*/*.c) $(wildcard $(SRC)/drivers/*/*.S) $(wildcard $(SRC)/modules/linux/*/*.c) $(wildcard $(SRC)/modules/linux/*.c) $(wildcard $(SRC)/lib/*/*.c)
 
 CHECKRA1N_C             := $(RA1N)/main.c $(RA1N)/shellcode.S

@@ -27,8 +27,10 @@
 #include <pongo.h>
 #include <aes/aes_private.h>
 #include <recfg/recfg_soc_private.h>
+#include "pongoboot.h"
 
 void shell_main();
+extern int iprintf(const char* fmt, ...);
 
 /*
 
@@ -59,6 +61,9 @@ void pongo_main_task() {
     // Enable IRQ serial RX
     serial_init();
 
+    // Register button IRQs when the device tree exposes them.
+    gpio_init();
+
     // Initialize pmgr
     pmgr_init();
 
@@ -83,6 +88,8 @@ void pongo_main_task() {
 
     // Set up Secure Enclave
     sep_setup();
+
+    pongoboot_main();
 
     puts("");
     puts("#==================");

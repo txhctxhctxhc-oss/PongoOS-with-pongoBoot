@@ -384,7 +384,7 @@ err_t vm_allocate(struct vm_space* vmspace, uint64_t* addr, uint64_t size, vm_fl
         // VM_FLAGS_ANYWHERE
     }
 
-    for (uint32_t i=0; i < vm_scan_size; i ++) {
+    for (uint32_t i=vm_index_start; i < vm_index_start + vm_scan_size; i ++) {
         uint8_t is_alloc = ((vmspace->vm_space_table[i >> 3]) >> (i & 7)) & 1;
         if (!is_alloc) {
             if (!found_pages) {
@@ -931,18 +931,15 @@ void ttbpage_free_walk(uint64_t base, bool is_tt1) {
 }
 bool tte_walk_get(struct vm_space* vmspace, uint64_t va, uint64_t** tte_out) {
     uint64_t bits = 64ULL;
-    bool is_tt1 = false;
     uint64_t* ttb = NULL;
     if (va & 0x7000000000000000) {
         bits -= t1sz;
         va -= (0xffffffffffffffff - ((1ULL << (65 - t1sz)) - 1));
         va &= (1ULL << bits) - 1;
-        is_tt1 = true;
         ttb = phystokv(vmspace->ttbr1);
     } else {
         bits -= t0sz;
         va &= (1ULL << bits) - 1;
-        is_tt1 = false;
         ttb = phystokv(vmspace->ttbr0);
     }
     uint32_t levels = ((bits - (tt_bits + 3ULL)) / tt_bits);

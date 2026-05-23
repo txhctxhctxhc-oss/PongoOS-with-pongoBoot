@@ -25,10 +25,36 @@
  * 
  */
 #include <pongo.h>
+#include "input.h"
+
+extern int iprintf(const char* fmt, ...);
+
+static uint32_t button_irqs[8];
+static uint32_t button_irq_count;
+
+static input_key_t gpio_irq_to_input(uint32_t irq)
+{
+    for (uint32_t i = 0; i < button_irq_count; i++) {
+        if (button_irqs[i] != irq) continue;
+        switch (i) {
+            case 0: return INPUT_VOLUP;
+            case 1: return INPUT_VOLDOWN;
+            case 2: return INPUT_HOME;
+            case 3: return INPUT_SIDE;
+            default: return INPUT_POWER;
+        }
+    }
+    return INPUT_NONE;
+}
 
 void gpio_main() {
     while(1) {
-        iprintf("gpio irq %x\n", task_current()->irq_type);
+        input_key_t key = gpio_irq_to_input(task_current()->irq_type);
+        if (key != INPUT_NONE) {
+            pongoboot_input_enqueue(key);
+        } else {
+            iprintf("gpio irq %x\n", task_current()->irq_type);
+        }
         task_exit_irq();
     }
 }
@@ -41,14 +67,16 @@ void gpio_early_init() {
 }
 
 void gpio_init() {
-    /*
     uint32_t len = 0;
     dt_node_t* buttons = dt_find(gDeviceTree, "buttons");
-    if (!buttons) panic("invalid devicetree: no buttons!");
+    if (!buttons) return;
     uint32_t* interrupts = dt_prop(buttons, "interrupts", &len);
-    if (!interrupts) panic("invalid devicetree: no interrupts!");
+    if (!interrupts) return;
     
     for (int i=0; i<len/4; i++) {
-        task_register_irq(&gpio_task, gpio_main, interrupts[i]);        
-    }*/
+        if (button_irq_count < (sizeof(button_irqs) / sizeof(button_irqs[0]))) {
+            button_irqs[button_irq_count++] = interrupts[i];
+        }
+        task_register_irq(&gpio_task, gpio_main, interrupts[i]);
+    }
 }
