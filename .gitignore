@@ -1,2 +1,8 @@
 .DS_Store
 build/
+# SELinux policy files
+*.te
+*.pp
+
+# Ignore nested repository
+cctools-port/
